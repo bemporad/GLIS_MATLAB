@@ -1,10 +1,9 @@
-function [nvar,Aineq,bineq,g,isLinConstrained,isNLConstrained,...
-    X,F,z,nsamp,maxevals,epsDeltaF,alpha,delta,rhoC,display,svdtol,...
-    dd,d0,useRBF,rbf,M,scalevars,globoptsol,pswarm_vars,direct_vars,...
-    isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained]=glis_init(lb,ub,opts)
+function Xs =glis_init(lb,ub,opts)
 % Init function for GLIS.
 %
-% (C) 2019 A. Bemporad, June 14, 2019
+% (C) 2019-2023 Alberto Bemporad, Mengjia Zhu
+
+global prob_setup
 
 nvar=numel(lb); % number of optimization variables
 lb=lb(:);
@@ -65,6 +64,18 @@ if isfield(opts,'scalevars')
     scalevars=opts.scalevars;
 else
     scalevars=true;
+end
+
+if isfield(opts, 'obj_transform')
+    obj_transform = opts.obj_transform;
+else
+    obj_transform = false;
+end
+
+if isfield(opts, 'obj_transform')
+    isObjTransformed = true;
+else
+    isObjTransformed = false;
 end
 
 if scalevars
@@ -232,13 +243,13 @@ else
     rbf=[];
 end
 
-nsamp=opts.nsamp;
+n_initial_random=opts.n_initial_random;
 alpha=opts.alpha;
 delta=opts.delta;
 maxevals=opts.maxevals;
-if maxevals<nsamp
+if maxevals<n_initial_random
     errstr='Max number of function evaluations is too low. You specified';
-    error('%s maxevals = %d and nsamp = %d',errstr,maxevals,nsamp);
+    error('%s maxevals = %d and n_initial_random = %d',errstr,maxevals,n_initial_random);
 end
 
 if isfield(opts,'display')
@@ -258,23 +269,23 @@ if ~useLHS
 end
 
 % Allocate variables
-X=zeros(maxevals,nvar);
-F=zeros(maxevals,1);
+Xs=zeros(n_initial_random,nvar);
+F=zeros(0, 1);
 z=zeros(nvar,1);
 
 % Generate initial samples
 if ~feasible_sampling
     % Don't care about constraints
     if useLHS
-        X(1:nsamp,:)=lhsdesign(nsamp,nvar); % Use Latin hypercube sampling instead
+        Xs(1:n_initial_random,:)=lhsdesign(n_initial_random,nvar); % Use Latin hypercube sampling instead
     else
-        X(1:nsamp,:)=rand(nsamp,nvar);
+        Xs(1:n_initial_random,:)=rand(n_initial_random,nvar);
     end
-    X(1:nsamp,:)=X(1:nsamp,:).*(ones(nsamp,1)*(ub-lb)')+ones(nsamp,1)*lb';
+    Xs(1:n_initial_random,:)=Xs(1:n_initial_random,:).*(ones(n_initial_random,1)*(ub-lb)')+ones(n_initial_random,1)*lb';
 else
-    nn=nsamp;
+    nn=n_initial_random;
     nk=0;
-    while nk<nsamp
+    while nk<n_initial_random
         if useLHS
             XX=lhsdesign(nn,nvar);
         else
@@ -294,34 +305,72 @@ else
         nk=sum(ii);
         if nk==0
             nn=20*nn;
-        elseif nk<nsamp
-            nn=ceil(min(20,1.1*nsamp/nk)*nn);
+        elseif nk<n_initial_random
+            nn=ceil(min(20,1.1*n_initial_random/nk)*nn);
         end
     end
     ii=find(ii);
-    X(1:nsamp,:)=XX(ii(1:nsamp),:);
+    Xs(1:n_initial_random,:)=XX(ii(1:n_initial_random),:);
 end
 
-if useRBF
-    M=zeros(maxevals,maxevals); % preallocate the entire matrix
-    for i=1:nsamp
-        for j=i:nsamp
-            mij=rbf(X(i,:),X(j,:));
-            M(i,j)=mij;
-            M(j,i)=mij;
-        end
-    end
+X = Xs.*(ones(n_initial_random,1)*dd')+ones(n_initial_random,1)*d0';
+
+% if useRBF
+%     M=zeros(maxevals,maxevals); % preallocate the entire matrix
+%     for i=1:n_initial_random
+%         for j=i:n_initial_random
+%             mij=rbf(Xs(i,:),Xs(j,:));
+%             M(i,j)=mij;
+%             M(j,i)=mij;
+%         end
+%     end
+% else
+%     M=[];
+% end
+
+if isfield(opts,'has_unknown_constraints')
+    has_unknown_constraints = opts.has_unknown_constraints;
 else
-    M=[];
+    has_unknown_constraints=false;
+end
+if isfield(opts,'has_satisfaction_fun')
+    has_satisfaction_fun= opts.has_satisfaction_fun;
+else
+    has_satisfaction_fun=false;
 end
 
-if isfield(opts,'isUnknownFeasibilityConstrained')
-    isUnknownFeasibilityConstrained = opts.isUnknownFeasibilityConstrained;
-else
-    isUnknownFeasibilityConstrained=false;
-end
-if isfield(opts,'isUnknownSatisfactionConstrained')
-    isUnknownSatisfactionConstrained= opts.isUnknownSatisfactionConstrained;
-else
-    isUnknownSatisfactionConstrained=false;
+prob_setup.nvar = nvar;
+prob_setup.Aineq = Aineq;
+prob_setup.bineq = bineq;
+prob_setup.g =  g;
+prob_setup.isLinConstrained = isLinConstrained;
+prob_setup.isNLConstrained = isNLConstrained;
+prob_setup.F = F;
+prob_setup.transformed_F = F;
+prob_setup.z = z;
+prob_setup.n_initial_random = n_initial_random;
+prob_setup.epsDeltaF = epsDeltaF;
+prob_setup.alpha = alpha;
+prob_setup.delta = delta;
+prob_setup.rhoC = rhoC;
+prob_setup.display = display;
+prob_setup.svdtol = svdtol;
+prob_setup.dd = dd;
+prob_setup.d0 = d0;
+prob_setup.useRBF = useRBF;
+prob_setup.rbf = rbf;
+% prob_setup.M = M;
+prob_setup.scalevars = scalevars;
+prob_setup.globoptsol = globoptsol;
+prob_setup.pswarm_vars = pswarm_vars;
+prob_setup.direct_vars = direct_vars;
+prob_setup.has_unknown_constraints = has_unknown_constraints;
+prob_setup.has_satisfaction_fun = has_satisfaction_fun;
+prob_setup.X = X;
+prob_setup.obj_transform = obj_transform;
+prob_setup.isObjTransformed = isObjTransformed;
+prob_setup.UnknownFeasible = [];
+prob_setup.UnknownSatisfactory = [];
+prob_setup.iter = 1;
+
 end

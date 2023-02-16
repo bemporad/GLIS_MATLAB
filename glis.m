@@ -65,8 +65,8 @@ function [xopt,fopt,out]=glis(f0,lb,ub,opts,g0,s0)
 % delta_E: delta for te pure IDW exploration term, \delta_E in the paper
 % delta_G_default: delta for feasibility constraints, \delta_{G,default} in the paper
 % delta_S_default: delta for satisfaction constraints, \delta_{S,default} in the paper
-% Feasibility_unkn: feasibility labels for unknown feasibility constraints
-% SatConst_unkn: satisfaction labels for unknown satisfactory constraints
+% UnknownFeasible: feasibility labels for unknown feasibility constraints
+% UnknownSatisfactory: satisfaction labels for unknown satisfactory constraints
 
 
 % Parameter setup
@@ -80,8 +80,8 @@ delta_E = delta;
 delta_G_default = delta; 
 delta_S_default = delta/2;  
 
-Feasibility_unkn = []; % feasibility labels (for unknown constraints only)
-SatConst_unkn = []; % satisfactory labels (for unknwon constraints onl)
+UnknownFeasible = []; % feasibility labels (for unknown constraints only)
+UnknownSatisfactory = []; % satisfactory labels (for unknwon constraints onl)
 isfeas_seq = ones(maxevals,1); % keep track the feasibility of the decision variables (including both known and unknown constraints)
 ibestseq = ones(maxevals,1); % keep track of the ibest throughout 
 
@@ -116,24 +116,24 @@ else
 end
 
 if isUnknownFeasibilityConstrained
-    Feasibility_unkn = zeros(nsamp,1);
+    UnknownFeasible = zeros(nsamp,1);
     for i=1:nsamp
-        Feasibility_unkn(i) = g_unkn(X(i,:)) < 1e-6;
+        UnknownFeasible(i) = g_unkn(X(i,:)) < 1e-6;
     end
-    delta_G = get_deltaAdpt(X,Feasibility_unkn,delta_G_default);
+    delta_G = get_deltaAdpt(X,UnknownFeasible,delta_G_default);
 else
-    Feasibility_unkn(1:nsamp) = ones(nsamp,1);
+    UnknownFeasible(1:nsamp) = ones(nsamp,1);
     delta_G = 0;
 end 
 
 if isUnknownSatisfactionConstrained
-    SatConst_unkn = zeros(nsamp,1);
+    UnknownSatisfactory = zeros(nsamp,1);
     for i=1:nsamp
-        SatConst_unkn(i) = s_unkn(X(i,:)) < 1e-6;
+        UnknownSatisfactory(i) = s_unkn(X(i,:)) < 1e-6;
     end
-    delta_S = get_deltaAdpt(X,SatConst_unkn,delta_S_default);
+    delta_S = get_deltaAdpt(X,UnknownSatisfactory,delta_S_default);
 else
-    SatConst_unkn(1:nsamp) = ones(nsamp,1);
+    UnknownSatisfactory(1:nsamp) = ones(nsamp,1);
     delta_S =0;
 end
     
@@ -158,10 +158,10 @@ for i=1:nsamp
         isfeas=isfeas && all(g(X(i,:)')<=0);
     end
     if isUnknownFeasibilityConstrained
-        isfeas=isfeas && Feasibility_unkn(i) >0;
+        isfeas=isfeas && UnknownFeasible(i) >0;
     end
     if isUnknownSatisfactionConstrained
-        isfeas=isfeas && SatConst_unkn(i) >0;
+        isfeas=isfeas && UnknownSatisfactory(i) >0;
     end
     if isfeas && fbest>F(i)
         fbest=F(i);
@@ -204,13 +204,13 @@ while N<maxevals
         iw_ibest = 1/sum(1./d_ibest);
     end
 
-    acquisition=@(x,p) facquisition(x(:)',X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,Feasibility_unkn,SatConst_unkn,delta_G,delta_S,iw_ibest,maxevals) +...
+    acquisition=@(x,p) facquisition(x(:)',X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,UnknownFeasible,UnknownSatisfactory,delta_G,delta_S,iw_ibest,maxevals) +...
                        constrpenalty(x(:));
     
     switch globoptsol
         case 'pswarm'
             pswarm_vars.Problem.ObjFunction= @(x) facquisition(x(:)',...
-            X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,Feasibility_unkn,SatConst_unkn,delta_G,delta_S,iw_ibest,maxevals)+...
+            X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,UnknownFeasible,UnknownSatisfactory,delta_G,delta_S,iw_ibest,maxevals)+...
                                                     constrpenalty(x(:));
             evalc('z=PSwarm(pswarm_vars.Problem,pswarm_vars.InitialPopulation,pswarm_vars.Options);');
             
@@ -246,15 +246,15 @@ while N<maxevals
     Fmin=min(Fmin,fz);
     
     if isUnknownFeasibilityConstrained
-        Feasibility_unkn(N) = g_unkn(z) < 1e-6;
-        delta_G = get_deltaAdpt(X,Feasibility_unkn,delta_G_default);
+        UnknownFeasible(N) = g_unkn(z) < 1e-6;
+        delta_G = get_deltaAdpt(X,UnknownFeasible,delta_G_default);
     else
         delta_G = 0;
     end
     
     if isUnknownSatisfactionConstrained
-        SatConst_unkn(N) = s_unkn(z) < 1e-6;
-        delta_S = get_deltaAdpt(X,SatConst_unkn,delta_S_default);
+        UnknownSatisfactory(N) = s_unkn(z) < 1e-6;
+        delta_S = get_deltaAdpt(X,UnknownSatisfactory,delta_S_default);
     else
         delta_S = 0;
     end
@@ -267,10 +267,10 @@ while N<maxevals
         isfeas=isfeas && all(g(z)<=0);
     end
     if isUnknownFeasibilityConstrained
-        isfeas=isfeas && Feasibility_unkn(N) >0;
+        isfeas=isfeas && UnknownFeasible(N) >0;
     end
     if isUnknownSatisfactionConstrained
-        isfeas=isfeas && SatConst_unkn(N) >0;
+        isfeas=isfeas && UnknownSatisfactory(N) >0;
     end
     if isfeas && fbest>fz
         fbest=fz;
@@ -311,15 +311,15 @@ if isfeas_seq(ibest) ==0 % for the case where no feasible optimizer is identifie
 end
 xopt=zbest;
 if ~isUnknownFeasibilityConstrained
-    Feasibility_unkn = ones(maxevals,1);
+    UnknownFeasible = ones(maxevals,1);
 end
 if ~isUnknownSatisfactionConstrained && ~isUnknownFeasibilityConstrained
-    SatConst_unkn = ones(maxevals,1);
+    UnknownSatisfactory = ones(maxevals,1);
 elseif ~isUnknownSatisfactionConstrained && isUnknownFeasibilityConstrained
-    SatConst_unkn = Feasibility_unkn;
+    UnknownSatisfactory = UnknownFeasible;
 end
-fes_opt_unkn = Feasibility_unkn(ibest);
-satConst_opt_unkn = SatConst_unkn(ibest);
+fes_opt_unkn = UnknownFeasible(ibest);
+satConst_opt_unkn = UnknownSatisfactory(ibest);
 feas_opt_comb = isfeas_seq(ibest);
 
 if scalevars
@@ -335,10 +335,10 @@ if ~useRBF
 end
 
 out=struct('X',X,'F',F,'W',W,'M',M,'fopt',fopt,'xopt',xopt,'ibest',ibest,'ibestseq',ibestseq,...
-    'Feasibility_unkn',Feasibility_unkn,'SatConst_unkn',SatConst_unkn,'fes_opt_unkn',fes_opt_unkn,'satConst_opt_unkn',satConst_opt_unkn,'isfeas_seq',isfeas_seq,'feas_opt_comb',feas_opt_comb);
+    'UnknownFeasible',UnknownFeasible,'UnknownSatisfactory',UnknownSatisfactory,'fes_opt_unkn',fes_opt_unkn,'satConst_opt_unkn',satConst_opt_unkn,'isfeas_seq',isfeas_seq,'feas_opt_comb',feas_opt_comb);
 
 %%%%%%%%%%%%%%%%%%%%%%
-function [f,fhat,dhat]=facquisition(x,X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,Feasibility_unkn,SatConst_unkn,delta_G,delta_S,iw_ibest,maxevals)
+function [f,fhat,dhat]=facquisition(x,X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,UnknownFeasible,UnknownSatisfactory,delta_G,delta_S,iw_ibest,maxevals)
 % Acquisition function to minimize to get next sample
 
 m=size(x,1); % number of points x to evaluate the acquisition function
@@ -354,12 +354,12 @@ for i=1:m
         fhat=F(ii(1));
         dhat=0;
         if isUnknownFeasibilityConstrained
-            Ghat=Feasibility_unkn(ii);
+            Ghat=UnknownFeasible(ii);
         else
             Ghat=1;
         end
         if isUnknownSatisfactionConstrained
-            Shat=SatConst_unkn(ii);
+            Shat=UnknownSatisfactory(ii);
         else
             Shat=1;
         end
@@ -385,13 +385,13 @@ for i=1:m
         end
 
         if isUnknownFeasibilityConstrained
-            Ghat=sum(Feasibility_unkn(1:N)'*w)/sw;
+            Ghat=sum(UnknownFeasible(1:N)'*w)/sw;
         else
             Ghat = 1;
         end  
 
         if isUnknownSatisfactionConstrained
-            Shat=sum(SatConst_unkn(1:N)'*w)/sw;
+            Shat=sum(UnknownSatisfactory(1:N)'*w)/sw;
         else
             Shat = 1;
         end
