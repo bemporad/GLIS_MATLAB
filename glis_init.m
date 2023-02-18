@@ -257,10 +257,17 @@ if isfield(opts,'display')
 else
     display=true;
 end
+
 if isfield(opts,'svdtol')
     svdtol=opts.svdtol;
 else
     svdtol=1e-6;
+end
+
+if isfield(opts,'scale_delta')
+    scale_delta = opts.scale_delta;
+else
+    scale_delta = false;
 end
 
 useLHS=exist('lhsdesign','file');
@@ -268,10 +275,31 @@ if ~useLHS
     fprintf('\nLatin hypercube sampling function LHSDESIGN not available, generating random samples\n');
 end
 
+prob_setup.nvar = nvar;
+prob_setup.Aineq = Aineq;
+prob_setup.bineq = bineq;
+prob_setup.g =  g;
+prob_setup.isLinConstrained = isLinConstrained;
+prob_setup.isNLConstrained = isNLConstrained;
+prob_setup.n_initial_random = n_initial_random;
+prob_setup.epsDeltaF = epsDeltaF;
+prob_setup.alpha = alpha;
+prob_setup.delta = delta;
+prob_setup.rhoC = rhoC;
+prob_setup.display = display;
+prob_setup.svdtol = svdtol;
+prob_setup.dd = dd;
+prob_setup.d0 = d0;
+prob_setup.useRBF = useRBF;
+prob_setup.rbf = rbf;
+prob_setup.obj_transform = obj_transform;
+prob_setup.isObjTransformed = isObjTransformed;
+
 % Allocate variables
 Xs=zeros(n_initial_random,nvar);
 F=zeros(0, 1);
 z=zeros(nvar,1);
+KnownFeasible = zeros(n_initial_random,1);
 
 % Generate initial samples
 if ~feasible_sampling
@@ -282,6 +310,13 @@ if ~feasible_sampling
         Xs(1:n_initial_random,:)=rand(n_initial_random,nvar);
     end
     Xs(1:n_initial_random,:)=Xs(1:n_initial_random,:).*(ones(n_initial_random,1)*(ub-lb)')+ones(n_initial_random,1)*lb';
+    if (~isLinConstrained && ~isNLConstrained)
+        KnownFeasible = true(n_initial_random,1);
+    else
+        for i = 1: n_initial_random
+            KnownFeasible(i,1) = isKnownFeasible(Xs(i,:));
+        end
+    end
 else
     nn=n_initial_random;
     nk=0;
@@ -311,6 +346,7 @@ else
     end
     ii=find(ii);
     Xs(1:n_initial_random,:)=XX(ii(1:n_initial_random),:);
+    KnownFeasible = true(n_initial_random,1);
 end
 
 X = Xs.*(ones(n_initial_random,1)*dd')+ones(n_initial_random,1)*d0';
@@ -339,26 +375,9 @@ else
     has_satisfaction_fun=false;
 end
 
-prob_setup.nvar = nvar;
-prob_setup.Aineq = Aineq;
-prob_setup.bineq = bineq;
-prob_setup.g =  g;
-prob_setup.isLinConstrained = isLinConstrained;
-prob_setup.isNLConstrained = isNLConstrained;
 prob_setup.F = F;
 prob_setup.transformed_F = F;
 prob_setup.z = z;
-prob_setup.n_initial_random = n_initial_random;
-prob_setup.epsDeltaF = epsDeltaF;
-prob_setup.alpha = alpha;
-prob_setup.delta = delta;
-prob_setup.rhoC = rhoC;
-prob_setup.display = display;
-prob_setup.svdtol = svdtol;
-prob_setup.dd = dd;
-prob_setup.d0 = d0;
-prob_setup.useRBF = useRBF;
-prob_setup.rbf = rbf;
 % prob_setup.M = M;
 prob_setup.scalevars = scalevars;
 prob_setup.globoptsol = globoptsol;
@@ -367,10 +386,23 @@ prob_setup.direct_vars = direct_vars;
 prob_setup.has_unknown_constraints = has_unknown_constraints;
 prob_setup.has_satisfaction_fun = has_satisfaction_fun;
 prob_setup.X = X;
-prob_setup.obj_transform = obj_transform;
-prob_setup.isObjTransformed = isObjTransformed;
 prob_setup.UnknownFeasible = [];
 prob_setup.UnknownSatisfactory = [];
+prob_setup.KnownFeasible = KnownFeasible;
 prob_setup.iter = 1;
+prob_setup.xnext = nan;
+prob_setup.fbest = inf;
+prob_setup.ibest = nan;
+prob_setup.xbest = nan;
+prob_setup.fbest_seq = [];
+prob_setup.ibest_seq = [];
+prob_setup.isfeas_seq = [];
+prob_setup.Fmin = inf;
+prob_setup.Fmax = -inf;
+prob_setup.isInitialized = false;
+prob_setup.time_opt_acquisition = [];
+prob_setup.time_fit_surrogate = [];
+prob_setup.scale_delta = scale_delta;
+
 
 end

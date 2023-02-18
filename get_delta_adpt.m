@@ -1,4 +1,4 @@
-function delta_adpt = get_deltaAdpt(X,constraint_set,delta_const_default)
+function delta_adpt = get_delta_adpt(X,constraint_set,delta_const_default)
 % Adaptively tune the hyperparameter delta_G and delta_S for the feasibility and satisfaction term in the acquisition function
 % For both terms, their delta is tuned via leave-one-out cross validation using IDW interpolation as a prediction method
 
