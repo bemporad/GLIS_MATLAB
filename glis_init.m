@@ -46,6 +46,17 @@ else
     rhoC=NaN;
 end
 
+if isLinConstrained && isNLConstrained
+    constrpenalty=@(x) rhoC*(sum(max(Aineq*x(:)-bineq,0).^2) +...
+        sum(max(g(x(:)),0).^2));
+elseif isLinConstrained && ~isNLConstrained
+    constrpenalty=@(x) rhoC*(sum(max(Aineq*x(:)-bineq,0).^2));
+elseif ~isLinConstrained && isNLConstrained
+    constrpenalty=@(x) rhoC*sum(max(g(x(:)),0).^2);
+else
+    constrpenalty=@(x) 0;
+end
+
 if isfield(opts,'feasible_sampling') && ~isempty(opts.feasible_sampling)
     feasible_sampling=opts.feasible_sampling;
 else
@@ -294,6 +305,7 @@ prob_setup.useRBF = useRBF;
 prob_setup.rbf = rbf;
 prob_setup.obj_transform = obj_transform;
 prob_setup.isObjTransformed = isObjTransformed;
+prob_setup.constrpenalty = constrpenalty;
 
 % Allocate variables
 Xs=zeros(n_initial_random,nvar);

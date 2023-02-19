@@ -107,7 +107,105 @@ if prob_setup.iter >= prob_setup.n_initial_random
        iw_ibest=0;
    end
 
-   % todo: continue from here
+   F_all = prob_setup.F;
+   F = F_all(ind_feas);  % only keeps values f(x) corresponding to feasible samples x
+   Xs = Xs_all(ind_feas, :);  % RBF or IDW only defined wrt feasible samples in Xs
+
+   % Update RBF matrix M
+   if prob_setup.iter >= prob_setup.n_initial_random
+       if prob_setup.useRBF && isfeas
+           N = numel(ind_feas);
+           prob_setup.M(N, 1:N) = 0; 
+           prob_setup.M(1:N, N) = 0;
+           % Just update last row and column of M
+           for h = 1:N-1
+               mij=prob_setup.rbf(Xs(h,:),Xs(N,:),prob_setup.rbf_epsil);
+               prob_setup.M(h,N)=mij;
+               prob_setup.M(N,h)=mij;
+           end 
+           prob_setup.M(N,N)=1.0;
+       end
+
+       if prob_setup.useRBF && prob_setup.has_unknown_constraints
+           N = prob_setup.iter;
+           prob_setup.M_unkn(N, 1:N) = 0;
+           prob_setup.M_unkn(1:N, N) = 0;
+           % Just update last row and column of M
+           for h = 1:N-1
+               mij=prob_setup.rbf(Xs_all(h,:),Xs_all(N,:),prob_setup.rbf_epsil);
+               prob_setup.M_unkn(h,N)=mij;
+               prob_setup.M_unkn(N,h)=mij;
+           end 
+           prob_setup.M_unkn(N,N)=1.0;
+       end
+   end
+
+   tic
+   if prob_setup.useRBF
+       % update weights using current F and matrix M (only consider the feasible samples)
+       W=get_rbf_weights(prob_setup.M,prob_setup.F,prob_setup.svdtol);
+   else
+       W = zeros(prob_setup.iter);
+   end
+   prob_setup.time_fit_surrogate = [prob_setup.time_fit_surrogate;toc];
+
+   % Related to unknown constraints
+   F_unkn = F_all;
+   if prob_setup.useRBF && prob_setup.has_unknown_constraints
+       ind_infeas = find(~prob_setup.isfeas_seq);
+       F_unkn(ind_infeas) = ones(numel(ind_infeas),1)*prob_setup.rhoC * dF_; % for infeasible ones, penalty values are assigned to the fun. eval
+       W_unkn = get_rbf_weights(prob_setup.M_unkn,F_unkn,prob_setup.svdtol); % update weights using current F and matrix M (consider all the samples)
+   else
+      W_unkn = zeros(prob_setup.iter); 
+   end
+
+
+   % todo: update from here
+   acquisition=@(x,p) facquisition(x(:)',X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,UnknownFeasible,UnknownSatisfactory,delta_G,delta_S,iw_ibest,maxevals) +...
+                       constrpenalty(x(:));
+    
+   switch globoptsol
+   case 'pswarm'
+       pswarm_vars.Problem.ObjFunction= @(x) facquisition(x(:)',...
+       X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,UnknownFeasible,UnknownSatisfactory,delta_G,delta_S,iw_ibest,maxevals)+...
+                                               constrpenalty(x(:));
+       evalc('z=PSwarm(pswarm_vars.Problem,pswarm_vars.InitialPopulation,pswarm_vars.Options);');
+        
+   case 'direct'
+       direct_vars.opt.min_objective = acquisition;
+       zold=z;
+       z=nlopt_optimize(direct_vars.opt,zold);
+       z=z(:);
+    
+   case {'tmw-pso','tmw-ga'}
+       lb2=lb;
+       ub2=ub;
+       if scalevars
+           lb2=-ones(nvar,1);
+           ub2=ones(nvar,1);
+       end
+       if strcmp(globoptsol,'tmw-pso')
+           z=particleswarm(acquisition,nvar,lb2,ub2,pswarm_vars.Options);
+       else
+           z=ga(acquisition,nvar,[],[],[],[],lb2,ub2,[],pswarm_vars.Options);
+       end
+       z=z(:);
+   end
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+function W=get_rbf_weights(M,F,svdtol)
+% Solve M*W = F using SVD
+
+[U,S,V]=svd(M);
+dS=diag(S);
+ns=find(dS>=svdtol,1,'last');
+W=V(:,1:ns)*diag(1./dS(1:ns))*U(:,1:ns)'*F;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%
 
 
 
