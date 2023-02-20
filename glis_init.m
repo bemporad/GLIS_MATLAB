@@ -46,17 +46,6 @@ else
     rhoC=NaN;
 end
 
-if isLinConstrained && isNLConstrained
-    constrpenalty=@(x) rhoC*(sum(max(Aineq*x(:)-bineq,0).^2) +...
-        sum(max(g(x(:)),0).^2));
-elseif isLinConstrained && ~isNLConstrained
-    constrpenalty=@(x) rhoC*(sum(max(Aineq*x(:)-bineq,0).^2));
-elseif ~isLinConstrained && isNLConstrained
-    constrpenalty=@(x) rhoC*sum(max(g(x(:)),0).^2);
-else
-    constrpenalty=@(x) 0;
-end
-
 if isfield(opts,'feasible_sampling') && ~isempty(opts.feasible_sampling)
     feasible_sampling=opts.feasible_sampling;
 else
@@ -87,6 +76,12 @@ if isfield(opts, 'obj_transform')
     isObjTransformed = true;
 else
     isObjTransformed = false;
+end
+
+if isfield(opts,'rbf_epsil')
+    rbf_epsil = opts.rbf_epsil;
+else
+    rbf_epsil = 1.0;
 end
 
 if scalevars
@@ -247,12 +242,25 @@ if shrink_range
     end
 end
 
-useRBF=opts.useRBF;
-if useRBF
-    rbf=opts.rbf;
+% useRBF=opts.useRBF;
+if ~isfield(opts,'rbf')
+    rbf = rbf_fun("inverse_quadratic");
+    useRBF = 1;
 else
-    rbf=[];
+    if opts.rbf == 'idw'
+        rbf = [];
+        useRBF = 0;
+    else
+        rbf = rbf_fun(opts.rbf);
+        useRBF = 1;
+    end
 end
+
+% if useRBF
+%     rbf=opts.rbf;
+% else
+%     rbf=[];
+% end
 
 n_initial_random=opts.n_initial_random;
 alpha=opts.alpha;
@@ -286,6 +294,17 @@ if ~useLHS
     fprintf('\nLatin hypercube sampling function LHSDESIGN not available, generating random samples\n');
 end
 
+if isLinConstrained && isNLConstrained
+    constrpenalty=@(x) rhoC*(sum(max(Aineq*x(:)-bineq,0).^2) +...
+        sum(max(g(x(:)),0).^2));
+elseif isLinConstrained && ~isNLConstrained
+    constrpenalty=@(x) rhoC*(sum(max(Aineq*x(:)-bineq,0).^2));
+elseif ~isLinConstrained && isNLConstrained
+    constrpenalty=@(x) rhoC*sum(max(g(x(:)),0).^2);
+else
+    constrpenalty=@(x) 0;
+end
+
 prob_setup.nvar = nvar;
 prob_setup.Aineq = Aineq;
 prob_setup.bineq = bineq;
@@ -306,6 +325,8 @@ prob_setup.rbf = rbf;
 prob_setup.obj_transform = obj_transform;
 prob_setup.isObjTransformed = isObjTransformed;
 prob_setup.constrpenalty = constrpenalty;
+prob_setup.rbf_epsil = rbf_epsil;
+prob_setup.expected_max_evals = maxevals;
 
 % Allocate variables
 Xs=zeros(n_initial_random,nvar);
@@ -412,6 +433,7 @@ prob_setup.isfeas_seq = [];
 prob_setup.Fmin = inf;
 prob_setup.Fmax = -inf;
 prob_setup.isInitialized = false;
+prob_setup.time_fun_eval = [];
 prob_setup.time_opt_acquisition = [];
 prob_setup.time_fit_surrogate = [];
 prob_setup.scale_delta = scale_delta;

@@ -22,12 +22,12 @@ prob_setup.UnknownSatisfactory= [prob_setup.UnknownSatisfactory;satisfactory];
 
 x = prob_setup.xnext; % this was computed at the previous call after n_initial_random iterations
 
-if prob_setup.iter < prob_setup.n_initial_random:
+if prob_setup.iter < prob_setup.n_initial_random
     isfeas = prob_setup.KnownFeasible(prob_setup.iter);
     prob_setup.time_opt_acquisition = [prob_setup.time_opt_acquisition;0];
     prob_setup.time_fit_surrogate = [prob_setup.time_fit_surrogate;0];
 else
-    isfeas = True; % actively generated samples are always feasible wrt known constraints
+    isfeas = true; % actively generated samples are always feasible wrt known constraints
     prob_setup.KnownFeasible = [prob_setup.KnownFeasible; isfeas];
 end
 if prob_setup.has_unknown_constraints
@@ -54,14 +54,14 @@ if prob_setup.display
         fprintf('N = %4d, best = %8g, current = %8g, x= [ ',prob_setup.iter,prob_setup.fbest,f_val);
     else
         fprintf('N = %4d, best = %8g, current = infeasible sample, x= [ ',prob_setup.iter,prob_setup.fbest);
-        for j=1:prob_setup.nvar
-            fprintf('%5.4f ',x(j));
-            if j < prob_setup.nvars - 1
-                fprintf(", ");
-            end
-        end
-        fprintf('] \n');
     end
+    for j=1:prob_setup.nvar
+        fprintf('%5.4f ',x(j));
+        if j < prob_setup.nvar - 1
+            fprintf(", ");
+        end
+    end
+    fprintf('] \n');
 end
 
 if prob_setup.iter == prob_setup.n_initial_random
@@ -71,7 +71,7 @@ if prob_setup.iter == prob_setup.n_initial_random
 end
 
 if prob_setup.iter >= prob_setup.n_initial_random
-    Xs_all = (prob_setup.X - ones(prob_setup.iter,1)*prob_setup.d0) / (ones(prob_setup.iter,1)*prob_setup.dd);
+    Xs_all = (prob_setup.X - ones(prob_setup.iter,1)*prob_setup.d0') ./ (ones(prob_setup.iter,1)*prob_setup.dd');
 
     delta_E = prob_setup.delta;
 
@@ -89,7 +89,7 @@ if prob_setup.iter >= prob_setup.n_initial_random
     end
 
    dF = prob_setup.Fmax - prob_setup.Fmin;
-   if dF == -np.inf:  % no feasible samples found so far
+   if dF == -inf  % no feasible samples found so far
         dF_ = nan;
    else
         dF_ = max(dF,prob_setup.epsDeltaF);
@@ -143,9 +143,9 @@ if prob_setup.iter >= prob_setup.n_initial_random
    tic
    if prob_setup.useRBF
        % update weights using current F and matrix M (only consider the feasible samples)
-       W=get_rbf_weights(prob_setup.M,prob_setup.F,prob_setup.svdtol);
+       W=get_rbf_weights(prob_setup.M, F,prob_setup.svdtol);
    else
-       W = zeros(prob_setup.iter);
+       W = zeros(prob_setup.iter,1);
    end
    prob_setup.time_fit_surrogate = [prob_setup.time_fit_surrogate;toc];
 
@@ -156,28 +156,37 @@ if prob_setup.iter >= prob_setup.n_initial_random
        F_unkn(ind_infeas) = ones(numel(ind_infeas),1)*prob_setup.rhoC * dF_; % for infeasible ones, penalty values are assigned to the fun. eval
        W_unkn = get_rbf_weights(prob_setup.M_unkn,F_unkn,prob_setup.svdtol); % update weights using current F and matrix M (consider all the samples)
    else
-      W_unkn = zeros(prob_setup.iter); 
+      W_unkn = zeros(prob_setup.iter,1); 
    end
 
-
-   % todo: update from here
-   acquisition=@(x,p) facquisition(x(:)',X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,UnknownFeasible,UnknownSatisfactory,delta_G,delta_S,iw_ibest,maxevals) +...
-                       constrpenalty(x(:));
+  acquisition=@(xs,p) facquisition(xs(:)',Xs,F,Xs_all,F_all,prob_setup.useRBF,prob_setup.rbf,prob_setup.rbf_epsil,W,delta_E,dF_,delta_G, delta_S, ...
+                                            prob_setup.scale_delta, prob_setup.iter,prob_setup.expected_max_evals, prob_setup.alpha,iw_ibest, ...
+                                            prob_setup.has_unknown_constraints, prob_setup.has_satisfaction_fun,...
+                                            prob_setup.UnknownFeasible, prob_setup.UnknownSatisfactory,...
+                                            prob_setup.isfeas_seq, prob_setup.rhoC,...
+                                            W_unkn, F_unkn) +...
+                                            dF_*prob_setup.constrpenalty(xs(:));
     
-   switch globoptsol
-   case 'pswarm'
-       pswarm_vars.Problem.ObjFunction= @(x) facquisition(x(:)',...
-       X,F,N,alpha,delta_E,dF,W,rbf,isUnknownFeasibilityConstrained,isUnknownSatisfactionConstrained,UnknownFeasible,UnknownSatisfactory,delta_G,delta_S,iw_ibest,maxevals)+...
-                                               constrpenalty(x(:));
+  tic
+    switch prob_setup.globoptsol
+    case 'pswarm'
+       pswarm_vars = prob_setup.pswarm_vars;
+       pswarm_vars.Problem.ObjFunction= @(xs) facquisition(xs(:)',Xs,F,Xs_all,F_all,prob_setup.useRBF,prob_setup.rbf,prob_setup.rbf_epsil,W,delta_E,dF_,delta_G, delta_S, ...
+                                            prob_setup.scale_delta, prob_setup.iter,prob_setup.expected_max_evals, prob_setup.alpha,iw_ibest, ...
+                                            prob_setup.has_unknown_constraints, prob_setup.has_satisfaction_fun,...
+                                            prob_setup.UnknownFeasible, prob_setup.UnknownSatisfactory,...
+                                            prob_setup.isfeas_seq, prob_setup.rhoC,...
+                                            W_unkn, F_unkn) +...
+                                            dF_*prob_setup.constrpenalty(xs(:));
        evalc('z=PSwarm(pswarm_vars.Problem,pswarm_vars.InitialPopulation,pswarm_vars.Options);');
         
-   case 'direct'
+    case 'direct'
        direct_vars.opt.min_objective = acquisition;
        zold=z;
        z=nlopt_optimize(direct_vars.opt,zold);
        z=z(:);
     
-   case {'tmw-pso','tmw-ga'}
+    case {'tmw-pso','tmw-ga'}
        lb2=lb;
        ub2=ub;
        if scalevars
@@ -190,10 +199,23 @@ if prob_setup.iter >= prob_setup.n_initial_random
            z=ga(acquisition,nvar,[],[],[],[],lb2,ub2,[],pswarm_vars.Options);
        end
        z=z(:);
-   end
+    end
 
+    prob_setup.time_opt_acquisition = [prob_setup.time_opt_acquisition;toc];
 
+    xsnext = z;
+    prob_setup.xnext = xsnext .* prob_setup.dd + prob_setup.d0;
+    prob_setup.X = [prob_setup.X;prob_setup.xnext'];
 
+else
+    prob_setup.xnext = prob_setup.X(prob_setup.iter + 1,:)';
+end
+
+prob_setup.iter = prob_setup.iter + 1;
+
+xnext = prob_setup.xnext';
+
+end
 
 %%%%%%%%%%%%%%%%%%%%%%
 function W=get_rbf_weights(M,F,svdtol)
@@ -202,22 +224,150 @@ function W=get_rbf_weights(M,F,svdtol)
 [U,S,V]=svd(M);
 dS=diag(S);
 ns=find(dS>=svdtol,1,'last');
-W=V(:,1:ns)*diag(1./dS(1:ns))*U(:,1:ns)'*F;
+if ~isempty(ns)
+    W=V(:,1:ns)*diag(1./dS(1:ns))*U(:,1:ns)'*F;
+else
+    W = [];
+end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%
+function [f,fhat,dhat]=facquisition(xs, Xs, F, Xs_all, F_all, useRBF, rbf, rbf_epsil, W, delta_E, dF,...
+                 delta_G, delta_S, scale_delta, N, maxevals, alpha, iw_ibest,...
+                 has_unknown_constraints, has_satisfaction_fun, UnknownFeasible, UnknownSatisfactory,...
+                 isfeas_seq, constrpenalty_value, W_unkn, F_unkn)
 
+% Acquisition function to minimize to get next sample
+m=size(xs,1); % number of points x to evaluate the acquisition function
+f=zeros(m,1);
 
+for i=1:m
+    xx=xs(i,:)';
+   
+    N_fes=size(Xs,1);
+    d=sum((Xs-ones(N_fes,1)*xx').^2,2);
 
+    if useRBF
+        rbf_xs = rbf(Xs,xx',rbf_epsil);
+    else
+        rbf_xs = 0.0;
+    end
+      
+    if useRBF && has_unknown_constraints
+        rbf_xs_unkn = rbf(Xs_all,xx',rbf_epsil);
+    else
+        rbf_xs_unkn = 0.0;
+    end
+    
+    if all(isfeas_seq) % if samples are all feasible
+        d_all = d;
+    else
+        % to account for all X that have been sampled (including the infeasible ones,
+        % since the distance info is used to estimate the probability of feasibility)
+        d_all = sum((Xs_all-ones(N,1)*xx').^2,2);
+    end
 
+    ii_=find(d_all<1e-12);
+    if ~isempty(ii_)
+        fhat=F_all(ii_(1));
+        fhat_unkn = F_unkn(ii_(1));
+        if ~isfeas_seq(ii_(1))
+            fhat = constrpenalty_value*dF;
+        end
+        dhat=0;
+        if has_unknown_constraints
+            Ghat=UnknownFeasible(ii_(1));
+        else
+            Ghat=1;
+        end
+        if has_satisfaction_fun
+            Shat=UnknownSatisfactory(ii_(1));
+        else
+            Shat=1;
+        end
+    else
+        if isempty(W)
+            fhat = 0.;
+            w = 0.;
+            sw = 0.;
+            aux = 0.;
 
+            if has_unknown_constraints
+                w_unkn = exp(-d_all)./d_all;
+                sw_unkn = sum(w_unkn);
+                if useRBF
+                    v_infes = rbf_xs_unkn;
+                    fhat_unkn = sum(v_infes.*W_unkn);
+                else
+                    fhat_unkn = sum(F_unkn.* w_unkn) / sw_unkn;
+                end
+            else
+                fhat_unkn = 0.;
+            end
+        else
+            w=exp(-d)./d;
+            sw=sum(w);
+            aux = 1./sum(1./d);
 
+            if useRBF
+                v = rbf_xs;
+                fhat = sum(v'*W);
+            else
+                fhat = sum(F'*w)/sw;
+            end
 
+            if has_unknown_constraints
+                w_unkn = exp(-d_all)./d_all;
+                sw_unkn = sum(w_unkn);
+                if useRBF
+                    v_infes = rbf_xs_unkn;
+                    fhat_unkn = sum(v_infes.*W_unkn);
+                else
+                    fhat_unkn = sum(F_unkn .* w_unkn) / sw_unkn;
+                end
+            else
+                fhat_unkn = 0.;
+            end
+        end
 
+        if all(isfeas_seq)
+            w_all = w;
+            sw_all = sw;
+            aux_all = aux;
+        else
+            w_all = exp(-d_all)./d_all;
+            sw_all = sum(w_all);
+            aux_all = 1./sum(1./d_all);
+        end
 
+        % when considering the IDW exploration function, take all the points sampled into account
+        if ~scale_delta
+            dhat = delta_E * atan(aux_all);
+            if ~isempty(W)
+                dhat = dhat * 2/pi*dF + alpha * sqrt(sum(w.*(F-fhat).^2)/sw);
+            else
+                dhat = delta_E * ((1-N/maxevals)*atan(aux_all * iw_ibest)+ N/maxevals *atan(aux_all));
+                if ~isempty(W)
+                    dhat = dhat * 2/pi*dF + alpha * sqrt(sum(w.*(F-fhat).^2)/sw);
+                end
+            end
+        end
 
+        if has_unknown_constraints
+            Ghat = sum(UnknownFeasible'*w_all)/sw_all;
+        else
+            Ghat = 1;
+        end 
 
+        if has_satisfaction_fun
+            Shat=sum(UnknownSatisfactory'*w_all)/sw_all;
+        else
+            Shat = 1;
+        end
+    end
 
+    f(i)=fhat-dhat+(delta_G*(1-Ghat)+delta_S*(1-Shat))*fhat_unkn;
 
+end
 
 end
