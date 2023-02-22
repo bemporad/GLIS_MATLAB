@@ -1,13 +1,14 @@
+% (C) 2019-2023 Alberto Bemporad, Mengjia Zhu
+
 clear all
 close all
 
 rng(2) % for repeatability
 
-% benchmark='ackley';
-benchmark='camelsixhumps';
+benchmark='ackley';
+% benchmark='camelsixhumps';
 % benchmark='hartman6';
 % benchmark='rosenbrock8';
-
 
 
 switch benchmark
@@ -91,26 +92,20 @@ opts.display=1;
 opts.scale_delta = false;
 opts.feasible_sampling=true;
 
-if use_nl_constraints
-    opts.g=@(x) [(x(1)-1).^2+x(2).^2-.25;
-        (x(1)-0.5).^2+(x(2)-0.5).^2-.25];
-end
-if use_linear_constraints
-    opts.Aineq=[1.6295    1.0000;
-        -1.0000    4.4553;
-        -4.3023   -1.0000;
-        -5.6905  -12.1374;
-        17.6198    1.0000];
-    
-    opts.bineq=[3.0786;
-        2.7417;
-        -1.4909;
-        1.0000;
-        32.5198];
-end
 
-
+fprintf("Solve the problem by feeding the simulator/fun directly into the GLIS solver \n")
 [xopt1, fopt1,prob_setup] = solve_glis(fun,lb,ub,opts);
+
+
+fprintf("Solve the problem incrementally (i.e., provide the function evaluation at each iteration) \n")
+rng(2)
+x_= initialize(lb,ub,opts); % x is unscaled
+for k = 1: maxevals
+    f_val = fun(x_);
+    [x_, prob_setup] = update_glis(f_val);
+end
+xopt2 = prob_setup.xbest;
+fopt2 = prob_setup.fbest;
 
 
 % figures
@@ -138,25 +133,6 @@ if nvars==2
         plot(xopt0(1,j),xopt0(2,j),'dr','linewidth',2);
     end
     plot(xopt1(1),xopt1(2),'g*','linewidth',2);
-    
-    if use_nl_constraints
-        % Plot constraints defined by function opts.g
-        C1=cos(0:.05:2*pi);
-        S1=sin(0:.05:2*pi);
-        X1=1+C1*.5;
-        Y1=S1*.5;
-        X2=0.5+C1*.5;
-        Y2=0.5+S1*.5;
-        plot(X1,Y1,X2,Y2,'linewidth',1.5);
-    end
-    if use_linear_constraints
-        V =[0.4104 -0.2748;
-            0.1934 0.6588;
-            1.3286 0.9136;
-            1.8412 0.0783;
-            1.9009 -0.9736];
-        patch(V(:,1),V(:,2),[.8 .8 .8],'FaceAlpha',0.2);
-    end
     
     hold off
 end

@@ -1,12 +1,12 @@
-function xnext = update_glis(f_val, feasible, satisfactory)
+function [xnext,prob_setup] = update_glis(f_val, feasible, satisfactory)
 % - Update the relevant variables w.r.t the newly queried sample
 % - And then solve the optimization problem on the updated acquisition function to obtain the next point to query
 
 global prob_setup
 
 if nargin <3
-    feasible = True;
-    satisfactory = True;
+    feasible = true;
+    satisfactory = true;
 
 end
 
@@ -45,8 +45,8 @@ prob_setup.isfeas_seq = [prob_setup.isfeas_seq; isfeas];
 ind_feas = find(prob_setup.isfeas_seq);
 
 if isfeas
-    prob_setup.Fmin = max(prob_setup.Fmax, f0);
-    prob_setup.Fmax = min(prob_setup.Fmin, f0);
+    prob_setup.Fmax = max(prob_setup.Fmax, f0);
+    prob_setup.Fmin = min(prob_setup.Fmin, f0);
 end
 
 if prob_setup.display

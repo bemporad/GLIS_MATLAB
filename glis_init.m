@@ -36,12 +36,25 @@ else
     shrink_range=opts.shrink_range;
 end
 
-if isLinConstrained || isNLConstrained
+if isfield(opts,'has_unknown_constraints')
+    has_unknown_constraints = opts.has_unknown_constraints;
+else
+    has_unknown_constraints=false;
+end
+if isfield(opts,'has_satisfaction_fun')
+    has_satisfaction_fun= opts.has_satisfaction_fun;
+else
+    has_satisfaction_fun=false;
+end
+
+if isLinConstrained || isNLConstrained 
     if isfield(opts,'constraint_penalty')
         rhoC=opts.constraint_penalty; 
     else
         rhoC=1000;
     end
+elseif has_unknown_constraints
+    rhoC=1000;
 else
     rhoC=NaN;
 end
@@ -247,7 +260,7 @@ if ~isfield(opts,'rbf')
     rbf = rbf_fun("inverse_quadratic");
     useRBF = 1;
 else
-    if opts.rbf == 'idw'
+    if opts.rbf == "idw"
         rbf = [];
         useRBF = 0;
     else
@@ -397,16 +410,6 @@ X = Xs.*(ones(n_initial_random,1)*dd')+ones(n_initial_random,1)*d0';
 %     M=[];
 % end
 
-if isfield(opts,'has_unknown_constraints')
-    has_unknown_constraints = opts.has_unknown_constraints;
-else
-    has_unknown_constraints=false;
-end
-if isfield(opts,'has_satisfaction_fun')
-    has_satisfaction_fun= opts.has_satisfaction_fun;
-else
-    has_satisfaction_fun=false;
-end
 
 prob_setup.F = F;
 prob_setup.transformed_F = F;
