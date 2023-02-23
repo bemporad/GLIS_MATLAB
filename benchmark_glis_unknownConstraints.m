@@ -3,6 +3,8 @@
 clear all
 close all
 
+addpath(genpath('./glis'))
+
 TIME0=tic;
 
 rng(0) % for repeatability
@@ -58,7 +60,7 @@ opts.maxevals=maxevals;
 opts.feasible_sampling=true;
 
 epsil=1;
-opts.epsil=epsil;
+opts.rbf_epsil=epsil;
 opts.rbf="inverse_quadratic";
 
 

@@ -3,6 +3,8 @@
 clear all
 close all
 
+addpath(genpath('./glis'))
+
 rng(2) % for repeatability
 
 benchmark='camelsixhumps';
@@ -61,6 +63,10 @@ opts.feasible_sampling=true;
 opts.g = g;
 opts.Aineq = Aineq;
 opts.bineq = bineq;
+opts.rbf="inverse_quadratic"; % Radial Basis Functions
+% opts.rbf="idw"; % Inverse Distance Weighting
+epsil=1;
+opts.rbf_epsil=epsil;
 
 
 [xopt1, fopt1,prob_setup] = solve_glis(fun,lb,ub,opts);

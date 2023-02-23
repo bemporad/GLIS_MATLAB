@@ -3,6 +3,8 @@
 clear all
 close all
 
+addpath(genpath('./glis'))
+
 rng(2) % for repeatability
 
 benchmark='ackley';
@@ -91,6 +93,10 @@ opts.globoptsol='pswarm';
 opts.display=1;
 opts.scale_delta = false;
 opts.feasible_sampling=true;
+opts.rbf="inverse_quadratic"; % Radial Basis Functions
+% opts.rbf="idw"; % Inverse Distance Weighting
+epsil=1;
+opts.rbf_epsil=epsil;
 
 
 fprintf("Solve the problem by feeding the simulator/fun directly into the GLIS solver \n")
