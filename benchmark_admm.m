@@ -13,7 +13,7 @@ addpath(genpath('./glis'))
 close all
 rng(0) % for reproducibility of results
 
-Ntests=2;
+Ntests=20;
 
 time0=tic;
 
