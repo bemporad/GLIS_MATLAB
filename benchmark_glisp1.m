@@ -18,8 +18,8 @@ RBFcalibrate=1; % recalibrate parameters during optimization
 acquisition_method=1; % acquisition method for RBF-based preference learning
 
 %benchmark='1d';
-%benchmark='brochu-2d';
-benchmark='camelsixhumps';
+benchmark='brochu-2d';
+% benchmark='camelsixhumps';
 %benchmark='camelsixhumps-constr';
 %benchmark='sasena-constr';
 
@@ -125,6 +125,7 @@ opts.feasible_sampling=true;
 opts.RBFcalibrate=RBFcalibrate;
 opts.thetas=thetas;
 opts.acquisition_method=acquisition_method;
+opts.comparetol = comparetol;
 
 opts.rbf_epsil=epsil;
 opts.rbf="inverse_quadratic"; % Radial Basis Functions
@@ -167,6 +168,7 @@ for j=1:Ntests
         for k = 1:maxevals-1
             pref_val = pref(x2,xbest2);
             [x2, out] = update_glisp(pref_val);
+            xbest2 = out.xbest;
         end
         xbest2 = out.xbest;
         out.X = out.X(1:end-1,:);

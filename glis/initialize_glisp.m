@@ -15,6 +15,12 @@ else
     prob_setup.sepvalue=opts.sepvalue;
 end
 
+if ~isfield(opts,'comparetol') || isempty(opts.comparetol)
+    prob_setup.comparetol=1e-4;
+else
+    prob_setup.comparetol=opts.comparetol;
+end
+
 if ~isfield(opts,'RBFcalibrate') || isempty(opts.RBFcalibrate)
     prob_setup.RBFcalibrate=false;
 else

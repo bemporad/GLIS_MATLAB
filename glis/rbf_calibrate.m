@@ -8,6 +8,7 @@ ibest = prob_setup.ibest;
 itheta = prob_setup.itheta;
 thetas = prob_setup.thetas;
 sepvalue = prob_setup.sepvalue;
+comparetol = prob_setup.comparetol;
 I = prob_setup.I;
 Ieq = prob_setup.Ieq;
 MM = prob_setup.MM;
@@ -87,7 +88,7 @@ for k=1:nth
                 j=jj(h);
                 i1=I(j,1);
                 i2=I(j,2);
-                if FH(i1)<=FH(i2)-sepvalue
+                if FH(i1)<=FH(i2)-comparetol
                     success(k)=success(k)+1;
                 end
             end
@@ -97,7 +98,7 @@ for k=1:nth
                 j=jj(h);
                 i1=Ieq(j,1);
                 i2=Ieq(j,2);
-                if abs(FH(i1)-FH(i2))<=sepvalue
+                if abs(FH(i1)-FH(i2))<=comparetol
                     success(k)=success(k)+1;
                 end
             end
