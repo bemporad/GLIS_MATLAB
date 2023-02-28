@@ -1,4 +1,4 @@
-function xnext = initialize(lb,ub,opts)
+function xnext = initialize_glis(lb,ub,opts)
 % Initialize the problem
 %             - obtain the initial samples to query
 %             - preallocate the RBF coefficient matrix for the initial samples uf RBF surrogate is used

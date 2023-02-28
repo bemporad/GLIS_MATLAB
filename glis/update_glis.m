@@ -182,7 +182,7 @@ if prob_setup.iter >= prob_setup.n_initial_random
         
     case 'direct'
        direct_vars.opt.min_objective = acquisition;
-       zold=z;
+       zold=prob_setup.z;
        z=nlopt_optimize(direct_vars.opt,zold);
        z=z(:);
     
@@ -204,6 +204,7 @@ if prob_setup.iter >= prob_setup.n_initial_random
     prob_setup.time_opt_acquisition = [prob_setup.time_opt_acquisition;toc];
 
     xsnext = z;
+    prob_setup.z = z;
     prob_setup.xnext = xsnext .* prob_setup.dd + prob_setup.d0;
     prob_setup.X = [prob_setup.X;prob_setup.xnext'];
 
