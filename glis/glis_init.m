@@ -327,6 +327,7 @@ prob_setup.Aineq = Aineq;
 prob_setup.bineq = bineq;
 prob_setup.g =  g;
 prob_setup.isLinConstrained = isLinConstrained;
+prob_setup.feasible_sampling = feasible_sampling;
 prob_setup.isNLConstrained = isNLConstrained;
 prob_setup.n_initial_random = n_initial_random;
 prob_setup.epsDeltaF = epsDeltaF;
