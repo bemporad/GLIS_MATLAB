@@ -24,8 +24,8 @@ else
     satisfactory = true;
 end
 
-prob_setup.UnknownFeasible.append(feasible)
-prob_setup.UnknownSatisfactory.append(satisfactory)
+prob_setup.UnknownFeasible = [prob_setup.UnknownFeasible;feasible];
+prob_setup.UnknownSatisfactory = [prob_setup.UnknownSatisfactory;satisfactory];
 
 for k = 1:prob_setup.expected_max_evals-1
     tic;

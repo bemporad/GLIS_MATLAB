@@ -29,15 +29,16 @@ if prob_setup.RBFcalibrate
     else
         prob_setup.thetas=opts.thetas;
         prob_setup.itheta=find(abs(prob_setup.thetas-1)<=1e-14);
-        if isempty(itheta)
+        if isempty(prob_setup.itheta)
             error('At least one element in thetas must be equal to 1');
         end
-        prob_setup.thetas(itheta)=1;
+        prob_setup.thetas(prob_setup.itheta)=1;
     end
 end
 
 prob_setup.theta = prob_setup.thetas(prob_setup.itheta);
-prob_setup.MM=zeros(prob_setup.n_initial_random,prob_setup.n_initial_random,numel(thetas));
+prob_setup.MM=zeros(prob_setup.n_initial_random,prob_setup.n_initial_random,numel(prob_setup.thetas));
+prob_setup.iM = 0; % index denoting the portion of MM already computed
 M = prob_setup.MM(1:prob_setup.n_initial_random,1:prob_setup.n_initial_random,prob_setup.itheta);
 for i=1:prob_setup.n_initial_random
     for j=i:prob_setup.n_initial_random
@@ -61,7 +62,7 @@ else
     prob_setup.acquisition_method=opts.acquisition_method;
 end
 
-if isObjTransformed
+if prob_setup.isObjTransformed
     warning("This is preference-based optimization, argument 'obj_transform' ignored");
 end
 

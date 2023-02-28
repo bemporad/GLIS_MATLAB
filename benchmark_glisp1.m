@@ -109,7 +109,6 @@ switch benchmark
         nsamp=8;
 end
 
-% TODO: update from here
 pref=@(x,y) glisp_function1(x,y,f,comparetol);
 
 epsil=1;
@@ -120,7 +119,7 @@ sepvalue=1/maxevals;
 opts=[];
 opts.sepvalue=sepvalue;
 opts.delta=delta;
-opts.nsamp=nsamp;
+opts.n_initial_random=nsamp;
 opts.maxevals=maxevals;
 opts.feasible_sampling=true;
 opts.RBFcalibrate=RBFcalibrate;
@@ -158,7 +157,19 @@ for j=1:Ntests
     if runBayesopt
         [xbest,out]=bayesopt_pref(pref,lb,ub,opts);
     else
-        [xbest,out]=glisp(pref,lb,ub,opts);
+        fprintf("Solve the problem by feeding the  preference expression step directly into the GLISp solver  \n")
+        [xbest, out] = solve_glisp(pref, lb,ub,opts);
+
+        rng(0) % for repeatability
+        fprintf("Solve the problem incrementally (i.e., provide the preference at each iteration)  \n")
+        [xbest2, x2] = initialize_glisp(lb,ub,opts); % x is unscaled
+
+        for k = 1:maxevals-1
+            pref_val = pref(x2,xbest2);
+            [x2, out] = update_glisp(pref_val);
+        end
+        xbest2 = out.xbest;
+        out.X = out.X(1:end-1,:);
     end
     X=out.X;
     F=zeros(maxevals,1);
@@ -166,20 +177,25 @@ for j=1:Ntests
         F(i)=glisp_function1('get',X(i,:)',f);
     end
     
-    F=zeros(maxevals,1);
-    ff=zeros(size(X,1),1);
-    for i=1:size(X,1)
-        F(i)=f(X(i,:));
-        ff(i)=min(F(1:i,:));
+    if runBayesopt
+        F=zeros(maxevals,1);
+        ff=zeros(size(X,1),1);
+        for i=1:size(X,1)
+            F(i)=f(X(i,:));
+            ff(i)=min(F(1:i,:));
+        end
+        FF(:,j)=ff;
+    else
+        xbest_seq = X(out.ibest_seq,:);
+        for i=1:size(X,1)
+            FF(i,j) = f(xbest_seq(i,:));
+        end
     end
-    FF(:,j)=ff;
     
 end
 if Ntests>1
     close(bar_handle);
 end
-
-fprintf('\nTotal CPU time: %5.1f s\n',toc(TIME0));
 
 
 % Find global optimum for comparison
@@ -288,9 +304,9 @@ if Ntests==1
         ax=axis;
         dd=(ax(2)-ax(1))/70;
         ibest=out.I(end,1);
-        for i=1:maxevals
-            h=plot(X(i,1),X(i,2),'o','linewidth',1,'color',[.2 0 0]);
-        end
+        plot(out.X(1:opts.n_initial_random,1),out.X(1:opts.n_initial_random,2),'o','linewidth',1.5,'Color',[1, 0.5, 0]);
+        plot(out.X(opts.n_initial_random+1:end,1),out.X(opts.n_initial_random+1:end,2),'bo','linewidth',1.5);
+
         plot(xbest(1),xbest(2),'*','linewidth',4,'color',[.8 0 0]);
         plot(xbest(1),xbest(2),'o','linewidth',5,'color',[.8 0 0]);
         set(gcf,'Position',[130 165 965 825]);

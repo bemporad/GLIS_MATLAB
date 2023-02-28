@@ -276,7 +276,11 @@ end
 % end
 
 n_initial_random=opts.n_initial_random;
-alpha=opts.alpha;
+if ~isfield(opts,'alpha')
+    alpha = 0.;
+else
+    alpha=opts.alpha;
+end
 delta=opts.delta;
 maxevals=opts.maxevals;
 if maxevals<n_initial_random

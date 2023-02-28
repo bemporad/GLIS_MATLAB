@@ -11,6 +11,9 @@ sepvalue = prob_setup.sepvalue;
 I = prob_setup.I;
 Ieq = prob_setup.Ieq;
 MM = prob_setup.MM;
+epsil = prob_setup.rbf_epsil;
+iM = prob_setup.iM;
+rbf = prob_setup.rbf;
 
 if prob_setup.display
     fprintf('Recalibrating RBF: ');
@@ -25,12 +28,9 @@ for k=1:nth
 
     % Update matrix containing RBF values for all thetas
     if ~(k==itheta)
-        iM = size(MM(:,:,k),1); % current dimension of MM(:,:,k)
-        MM(iM+1,N-iM,k) =0;
-        MM(N-iM, N) = 0;
         for j=iM+1:N
             for h=1:N
-                MM(j,h,k)=rbf(Xs(j,:)',Xs(h,:)',epsilth);
+                MM(j,h,k)=rbf(Xs(j,:),Xs(h,:),epsilth);
                 MM(h,j,k)=MM(j,h,k);
             end
         end
@@ -68,7 +68,7 @@ for k=1:nth
             Mi(i,:)=[];
             Mi(:,i)=[];
             
-            Wi=get_weights(Xi,Ii,Ieqi,Mi,N-1,newibest,sepvalue);
+            Wi=get_rbf_weights_pref(Mi,N-1,Ii,Ieqi,newibest);
             
             % Compute RBF @Xs(i,:)'
             FH=zeros(N,1);
@@ -87,7 +87,7 @@ for k=1:nth
                 j=jj(h);
                 i1=I(j,1);
                 i2=I(j,2);
-                if FH(i1)<=FH(i2)-comparetol
+                if FH(i1)<=FH(i2)-sepvalue
                     success(k)=success(k)+1;
                 end
             end
@@ -97,13 +97,13 @@ for k=1:nth
                 j=jj(h);
                 i1=Ieq(j,1);
                 i2=Ieq(j,2);
-                if abs(FH(i1)-FH(i2))<=comparetol
+                if abs(FH(i1)-FH(i2))<=sepvalue
                     success(k)=success(k)+1;
                 end
             end
         end
     end
-    if display
+    if prob_setup.display
         fprintf('.');
     end
     success(k)=success(k)/Ncomparisons*100; % NOTE: normalization is only for visualization purposes
@@ -115,8 +115,10 @@ theta_max=thetas(imax);
 [~,ii]=min((theta_max-1).^2); % get the theta closest to 1 among maxima
 prob_setup.theta=theta_max(ii);
 prob_setup.itheta=imax(ii);
+prob_setup.iM = N;
+prob_setup.MM = MM;
 
-if display
+if prob_setup.display
     fprintf(' done.\n');
 end
 
