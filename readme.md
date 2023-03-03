@@ -124,7 +124,6 @@ fprintf("Solve the problem by feeding the simulator/fun directly into the GLIS s
 [xopt1, fopt1,prob_setup1] = solve_glis(fun,lb,ub,opts);
 
 fprintf("Solve the problem incrementally (i.e., provide the function evaluation at each iteration) \n")
-rng(2)
 x_= initialize_glis(lb,ub,opts); % x_ is unscaled
 for k = 1: maxevals
     f_val = fun(x_);
@@ -227,10 +226,10 @@ GLISp performs acquisition in a similar way than GLIS. The surrogate $\hat f$ is
 GLISp also supports, in alternative, the acquisition based on the maximimization of the *probability of improvement*, as defined in [[2]](#cite-BP21). This can be specified as follows:
 
 ~~~python
-opts.acquisition_method=2; % 1 = IDW acquisition function, 2 = prob. improvement
+opts.acquisition_method=2; % 1 = IDW acquisition function, 2 = probability of improvement
 ~~~
 
-By default, `acquisition_method` = 1.
+By default, `opts.acquisition_method` = 1.
 
 
 <a name="recalibration"><a>
@@ -254,6 +253,14 @@ where `steps` is an array of step indices at which recalibration must be perform
 ### Unknown constraints and satisfactory samples
 
 As detailed in [[3]](#cite-ZPB22), GLIS/GLISp can handle *unknown* constraints on $x$, where the shape of $X$ is unknown, and support labeling samples $x$ as *satisfactory* or not. Check the numerical benchmark under `example` folder for how to instruct the solver to collect such extra information during queries.
+
+~~~python
+% use GLIS
+[xbest, fbest,prob_setup] = solve_glis(f,lb,ub,opts,eval_feas_,eval_sat_);
+
+% use GLISp
+[xbest,out]=solve_glisp(pref,lb,ub,opts,eval_feas_,eval_sat_);
+~~~
 
 
 <a name="transformation"><a>
