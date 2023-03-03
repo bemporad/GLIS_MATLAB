@@ -242,7 +242,7 @@ the RBF parameter $\epsilon$. This is achieved by performing leave-one-out cross
 ~~~python
 opts.RBFcalibrate = 1;
 opts.thetas=thetas;
-prob_setup.RBFcalibrationSteps = steps;
+opts.RBFcalibrationSteps = steps;
 ~~~
 
 where `steps` is an array of step indices at which recalibration must be performed, and `thetas` is the array of values of $\theta$ tested during recalibration.
@@ -256,7 +256,7 @@ As detailed in [[3]](#cite-ZPB22), GLIS/GLISp can handle *unknown* constraints o
 
 ~~~python
 % use GLIS
-[xbest, fbest,prob_setup] = solve_glis(f,lb,ub,opts,eval_feas_,eval_sat_);
+[xbest, fbest,out] = solve_glis(f,lb,ub,opts,eval_feas_,eval_sat_);
 
 % use GLISp
 [xbest,out]=solve_glisp(pref,lb,ub,opts,eval_feas_,eval_sat_);
