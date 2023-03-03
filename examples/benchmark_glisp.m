@@ -1,11 +1,27 @@
-% Test optimization by preference learning on benchmark problems
+% Examples solved by GLISp
+%     - with box constraints and known constraints
 %
-% (C) 2019 A. Bemporad, September 21, 2019
+% For comparison, one can also use this file to solve the benchmarks with
+% Bayesian optimization by setting runBayesopt = 1
+% 
+% Notes:
+%     - The preference expression step may be
+%         - integrated/fed directly into GLISp
+%         - incrementally provided to GLISp
+%     - RBF surrogate is used
+%         - The user may choose to recalibrate the RBF parameters during the solving process
+%     - For exploration step, one may use the following methods:
+%         - IDW
+%         - probability of improvement
+%     Templates of the aforementioned solving procedures are noted in this file
+% 
+% Authors: A. Bemporad, M. Zhu
+
 
 clear all
 close all
 
-addpath(genpath('./glis'))
+addpath(genpath('.././glis'))
 
 rng(0) % for repeatability
 

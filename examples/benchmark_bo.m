@@ -1,11 +1,12 @@
-% Test global optimization based on IDW and RBF on a benchmark problem
+% Test global optimization using Bayesian optimization (for comparison)
 %
 % (C) 2019 A. Bemporad, June 14, 2019
+% updated by M. Zhu, March 3, 2023
 
 clear all
 close all
 
-addpath(genpath('./glis'))
+addpath(genpath('.././glis'))
 
 rng(2) % for repeatability
 

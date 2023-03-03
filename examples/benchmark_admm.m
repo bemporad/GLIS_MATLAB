@@ -1,4 +1,4 @@
-function out=test_admm
+function out=benchmark_admm
 % (C) 2019 by A Bemporad, June 11, 2019
 %
 % Use GLIS to optimize parameters rho,alpha of ADMM to solve the QP problems
@@ -7,8 +7,9 @@ function out=test_admm
 %     s.t. A*z <= b + Sx
 %
 % with x ranging in the box [lbx,ubx]
+% updated by M. Zhu, March 3, 2023
 
-addpath(genpath('./glis'))
+addpath(genpath('.././glis'))
 
 close all
 rng(0) % for reproducibility of results

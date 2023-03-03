@@ -1,4 +1,6 @@
 function feasible = eval_feas(x, has_syn_unknown_const,g_unkn_fun)
+% Define synthetic feasibility check function
+
 if nargin <2
     has_syn_unknown_const = false;
 end

@@ -1,9 +1,18 @@
-% (C) 2019-2023 Alberto Bemporad, Mengjia Zhu
+% 2D examples solved using GLISp (for visualization)
+%     - with KNOWN linear and/or nonlinear inequality constraints
+% 
+% Solve the problem with
+%     - feasible initial samples
+% 
+% Note: infeasible initial sampling w.r.t known constraints of GLISp is disabled for sample efficiency
+% 
+% Authors: A. Bemporad, M. Zhu
+
 
 clear all
 close all
 
-addpath(genpath('./glis'))
+addpath(genpath('.././glis'))
 
 rng(2) % for repeatability
 

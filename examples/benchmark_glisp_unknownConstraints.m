@@ -1,17 +1,15 @@
-% Test optimization by preference learning with unknown constraint handling on benchmark problems
-% Algorithms:
-%   - C-GLISp
-%   - C-GLIS
-%   - PBO
-%
-% Reference code: 'test_pref_benchmarks' by A. Bemporad, September 21, 2019
+% 2D examples with unknown constraints solved using GLISp (for visualization)
+% 
+% Note:
+%     - Templates of the different solving procedures are available. Please check notes in the file 'benchmark_glisp.m'
+% 
+% Authors: A. Bemporad, M. Zhu
 
-% M. Zhu, June 07, 2021
 
 clear all
 close all
 
-addpath(genpath('./glis'))
+addpath(genpath('.././glis'))
 
 rng(0) % for repeatability
 

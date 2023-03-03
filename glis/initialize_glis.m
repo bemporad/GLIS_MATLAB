@@ -26,6 +26,4 @@ xnext = prob_setup.X(1,:);
 prob_setup.xnext = xnext;  % initial sample to query (unscaled)
 prob_setup.isInitialized = true;
 
-
-
 end

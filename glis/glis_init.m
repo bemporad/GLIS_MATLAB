@@ -1,5 +1,6 @@
 function Xs =glis_init(lb,ub,opts)
-% Init function for GLIS.
+% Init function for GLIS, GLISp, and C-GLISp
+% to set up the problem and provide the default values to related parameters
 %
 % (C) 2019-2023 Alberto Bemporad, Mengjia Zhu
 
@@ -263,6 +264,13 @@ else
     if opts.rbf == "idw"
         rbf = [];
         useRBF = 0;
+    elseif opts.rbf == "dummy"
+        rbf = [];
+        if isfield(opts,'useRBF')
+            useRBF = opts.useRBF;
+        else
+            useRBF = 0;
+        end
     else
         rbf = rbf_fun(opts.rbf);
         useRBF = 1;

@@ -181,6 +181,7 @@ if prob_setup.iter >= prob_setup.n_initial_random
        evalc('z=PSwarm(pswarm_vars.Problem,pswarm_vars.InitialPopulation,pswarm_vars.Options);');
         
     case 'direct'
+       direct_vars = prob_setup.direct_vars;
        direct_vars.opt.min_objective = acquisition;
        zold=prob_setup.z;
        z=nlopt_optimize(direct_vars.opt,zold);

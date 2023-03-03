@@ -36,15 +36,20 @@ function [xopt,out]=bayesopt_pref(pref0,lb,ub,opts)
 %     Revised by A. Bemporad, September 22, 2019
 %     Revised by M. Zhu, June 9, 2021 
 
+global prob_setup
+
 opts.useRBF=true;
 opts.scalevars=false;
 pref=pref0;
 
 opts.alpha=0; % dummy
-opts.rbf=@(x1,x2) 0; % dummy
+opts.rbf="dummy"; % dummy
 
-[nvar,Aineq,bineq,g,isLinConstrained,isNLConstrained,...
-    X,F,~,nsamp,maxevals,epsDeltaF,~,~,rhoC,display]=glis_init(lb,ub,opts);
+X = glis_init(lb,ub,opts);
+
+nvar=prob_setup.nvar; Aineq=prob_setup.Aineq; bineq= prob_setup.bineq; g=prob_setup.g;isLinConstrained=prob_setup.isLinConstrained; isNLConstrained= prob_setup.isNLConstrained;
+F= prob_setup.F; nsamp=prob_setup.n_initial_random ;maxevals=prob_setup.expected_max_evals ;epsDeltaF=prob_setup.epsDeltaF ;rhoC=prob_setup.rhoC ;display= prob_setup.display;
+
 N=nsamp;
 
 if ~isfield(opts,'RBFcalibrate') || isempty(opts.RBFcalibrate)

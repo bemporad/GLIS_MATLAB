@@ -1,9 +1,15 @@
-% (C) 2019-2023 Alberto Bemporad, Mengjia Zhu
+% 2D examples with unknown constraints solved using GLIS (for visualization)
+% 
+% Note:
+%     - Templates of the different solving procedures are available. Please check notes in the file 'benchmark_glis.m'
+% 
+% Authors: A. Bemporad, M. Zhu
+
 
 clear all
 close all
 
-addpath(genpath('./glis'))
+addpath(genpath('.././glis'))
 
 TIME0=tic;
 

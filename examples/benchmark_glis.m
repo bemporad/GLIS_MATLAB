@@ -1,9 +1,28 @@
-% (C) 2019-2023 Alberto Bemporad, Mengjia Zhu
+% Examples solved using GLIS 
+%     - with box constraints only
+%     - check examples with known constraints in the file 'benchmark_glis_knownConstraints.m'
+%     - check examples with unknown constraints in the file 'benchmark_glis_unknownConstraints.m'
+% 
+% Note:
+%     - Problems can be solved by
+%         - integrating/feeding the simulator/fun directly into the GLIS solver
+%             - simulator/fun:
+%                 - input: a sample to test (provided by GLIS)
+%                 - output: the evaluation
+%             - the intermediate steps within the simulator/fun are unknown to the GLIS (black-box)
+%         - incrementally (i.e., provide the function evaluation at each iteration)
+%     - User-defined nonlinear transformation of obj. fun. during the solving process is possible
+%     - RBF (default) or IDW surrogate fun. can be used to fit the surrogate fun.
+%         - different RBF models can be used (default: inverse_quadratic)
+%     - Templates of the aforementioned solving procedures are noted in this file
+% 
+% Authors: A. Bemporad, M. Zhu
+
 
 clear all
 close all
 
-addpath(genpath('./glis'))
+addpath(genpath('.././glis'))
 
 rng(2) % for repeatability
 
@@ -100,18 +119,22 @@ opts.rbf_epsil=epsil;
 
 
 fprintf("Solve the problem by feeding the simulator/fun directly into the GLIS solver \n")
-[xopt1, fopt1,prob_setup] = solve_glis(fun,lb,ub,opts);
-
+[xopt1, fopt1,prob_setup1] = solve_glis(fun,lb,ub,opts);
 
 fprintf("Solve the problem incrementally (i.e., provide the function evaluation at each iteration) \n")
 rng(2)
 x_= initialize_glis(lb,ub,opts); % x is unscaled
 for k = 1: maxevals
     f_val = fun(x_);
-    [x_, prob_setup] = update_glis(f_val);
+    [x_, prob_setup2] = update_glis(f_val);
 end
-xopt2 = prob_setup.xbest;
-fopt2 = prob_setup.fbest;
+xopt2 = prob_setup2.xbest;
+fopt2 = prob_setup2.fbest;
+
+fprintf("Solve global optimization problem under a nonlinear transformation of objective function \n")
+rng(2)
+opts.obj_transform = @(f) log(f+2.);
+[xopt3, fopt3,prob_setup3] = solve_glis(fun,lb,ub,opts);
 
 
 % figures
@@ -133,8 +156,8 @@ if nvars==2
     figure
     contour(x1,x2,y,50);
     hold on
-    plot(prob_setup.X(1:opts.n_initial_random,1),prob_setup.X(1:opts.n_initial_random,2),'o','linewidth',1.5,'Color',[1, 0.5, 0]);
-    plot(prob_setup.X(opts.n_initial_random+1:end,1),prob_setup.X(opts.n_initial_random+1:end,2),'bo','linewidth',1.5);
+    plot(prob_setup1.X(1:opts.n_initial_random,1),prob_setup1.X(1:opts.n_initial_random,2),'o','linewidth',1.5,'Color',[1, 0.5, 0]);
+    plot(prob_setup1.X(opts.n_initial_random+1:end,1),prob_setup1.X(opts.n_initial_random+1:end,2),'bo','linewidth',1.5);
     for j=1:size(xopt0,2)
         plot(xopt0(1,j),xopt0(2,j),'dr','linewidth',2);
     end
@@ -145,9 +168,9 @@ end
 
 figure
 if ~strcmp(benchmark,'rosenbrock8')
-    plot(1:nn,prob_setup.fbest_seq,1:nn,ones(1,nn)*fopt0,'--','linewidth',1.5);
+    plot(1:nn,prob_setup1.fbest_seq,1:nn,ones(1,nn)*fopt0,'--','linewidth',1.5);
 else
-    semilogy(1:nn,prob_setup.fbest_seq,1:nn,ones(1,nn)*fopt0,'--','linewidth',1.5);
+    semilogy(1:nn,prob_setup1.fbest_seq,1:nn,ones(1,nn)*fopt0,'--','linewidth',1.5);
 end
 grid
 title('Best function value found')

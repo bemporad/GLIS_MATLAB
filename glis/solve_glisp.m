@@ -1,4 +1,19 @@
 function [xbest, prob_setup] = solve_glisp(pref_fun, lb,ub,opts, unknown_constraint_fun,satisfactory_fun)
+% If the pref_fun (decision-maker process) and the unknwn_constraint_fun, satisfactory_fun, if exist, have already be integrated with the GLISp solver,
+%     - use solve() to solve the problem directly
+% 
+% Note: Here max_prefs = number of preferences expressed on max_prefs+1 samples
+% 
+%     pref_fun: decision-maker process
+%         - Input: two samples to compare with
+%         - Output (int): preference evaluation {-1, 0, 1}
+%     unknown_constraint_fun:
+%         - Input: sample to query
+%         - Output (bool): True if feasible; False if infeasible
+%     satisfactory_fun:
+%         - Input: sample to query
+%         - Output (bool): True if satisfactory; False if unsatisfactory
+
 
 global prob_setup
 

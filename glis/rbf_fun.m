@@ -1,10 +1,5 @@
 function fun = rbf_fun(rbf_type)
-% GLIS - (GL)obal optimization solvers using (I)nverse distance weighting and
-% radial basis function (S)urrogates.
-% 
-% RBF functions.
-% 
-% (C) 2019-2023 Alberto Bemporad, Mengjia Zhu
+% RBF functions for surrogate fitting.
 
 if rbf_type == "inverse_quadratic"
     fun = @(x1, x2, epsil) 1./(1+epsil^2*sum((x1-x2).^2,2));

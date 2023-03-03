@@ -1,4 +1,16 @@
 function [xbest, fbest, prob_setup] = solve_glis(fun, lb,ub,opts, unknown_constraint_fun,satisfactory_fun)
+% If the simulator/fun and the unknwn_constraint_fun, satisfactory_fun, if exist, have already be integrated with the GLIS solver,
+%             - use solve_glis() to solve the problem directly
+%     fun: the simulator/fun/...
+%         - Input: sample to query
+%         - Output: performance/function evaluation
+%     unknown_constraint_fun:
+%         - Input: sample to query
+%         - Output (bool): True if feasible; False if infeasible
+%     satisfactory_fun:
+%         - Input: sample to query
+%         - Output (bool): True if satisfactory; False if unsatisfactory
+
 
 global prob_setup
 

@@ -1,6 +1,5 @@
-%%%%%%%%%%%%%%%%%%%%%%
 function beta=get_rbf_weights_pref(M,n,I,Ieq,ibest)
-% Fit RBF satisfying comparison constraints at sampled points
+% Fit RBF satisfying comparison constraints at sampled points for GLISp and C-GLISp
 
 % optimization vector x=[beta;epsil] where:
 %    beta  = rbf coefficients
