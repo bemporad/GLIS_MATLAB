@@ -123,13 +123,13 @@ end
 
 % Make comparison
 if fx<fy-comparetol
-    if (fesx+softx ==2) || (fesx+softx ==0 && fesy+softy ==0)
+    if (fesx && softx) || (~fesx && ~softx && ~fesy && ~softy)
         out=-1;
     else
         out =1;
     end
 elseif fx>fy+comparetol
-    if (fesy+softy ==2) || (fesx+softx ==0 && fesy+softy ==0)
+    if (fesy && softy) || (~fesx && ~softx && ~fesy && ~softy)
         out=1;
     else
         out=-1;

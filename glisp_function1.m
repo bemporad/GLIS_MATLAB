@@ -92,13 +92,13 @@ end
 
 % Make comparison
 if fx<fy-comparetol
-    if (fes_known_x ==1) || (fes_known_x ==0 && fes_known_y ==0)
+    if fes_known_x || (~fes_known_x && ~fes_known_y)
         out=-1;
     else
         out =1;
     end
 elseif fx>fy+comparetol
-    if (fes_known_y ==1) || (fes_known_x ==0 && fes_known_y ==0)
+    if (fes_known_y) || (~fes_known_x && ~fes_known_y)
         out=1;
     else
         out=-1;

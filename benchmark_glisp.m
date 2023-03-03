@@ -17,11 +17,10 @@ runBayesopt=0; % 0 = run preference learning based on RBF surrogates
 RBFcalibrate=1; % recalibrate parameters during optimization
 acquisition_method=1; % acquisition method for RBF-based preference learning
 
-%benchmark='1d';
+% benchmark='1d';
 benchmark='brochu-2d';
 % benchmark='camelsixhumps';
-%benchmark='camelsixhumps-constr';
-%benchmark='sasena-constr';
+% benchmark='sasena-constr';
 
 switch benchmark
     case '1d'
@@ -52,29 +51,6 @@ switch benchmark
         
         maxevals=20;
         delta=1;
-        nsamp=round(maxevals/3);
-        
-    case 'camelsixhumps-constr'
-        %CamelSixHumps function with constraints
-        nvars = 2;
-        lb=[-2;-1];
-        ub=[2;1];
-        f = @(x) (4-2.1*x(1).^2+x(1).^4/3).*x(1).^2+...
-            x(1).*x(2)+(4*x(2).^2-4).*x(2).^2;
-        comparetol=1e-4;
-        
-        Aineq=[1.6295 1;
-            -1 4.4553;
-            -4.3023 -1;
-            -5.6905 -12.1374
-            17.6198 1];
-        
-        bineq = [3.0786; 2.7417; -1.4909; 1; 32.5198];
-        
-        g=@(x) [(x(1)-0)^2+(x(2)+.1)^2-.5];
-        
-        delta=.3;
-        maxevals=50;
         nsamp=round(maxevals/3);
         
     case 'brochu-2d'
@@ -136,7 +112,7 @@ opts.maxevals=maxevals;
 opts.globoptsol='pswarm';
 
 opts.display=1;
-opts.scalevars=0;
+opts.scalevars=1;
 
 opts.Aineq=Aineq;
 opts.bineq=bineq;

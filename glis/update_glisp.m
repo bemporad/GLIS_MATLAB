@@ -92,7 +92,7 @@ if prob_setup.iter >= prob_setup.n_initial_random
     FH=M*W; % surrogate at current samples
     dF=max(max(FH)-min(FH),prob_setup.epsDeltaF);
 
-    if prob_setup.scale_delta && (numel(ind_feas) >0)
+    if prob_setup.scale_delta
        d_ibest=sum(([Xs(1:prob_setup.ibest-1,:);Xs(prob_setup.ibest+1:prob_setup.iter,:)]-Xs(prob_setup.ibest,:)).^2,2); % exclude the ibest term in X when calculate d_ibest
         ii=find(d_ibest<1e-12,1);
         if ~isempty(ii)
@@ -198,10 +198,10 @@ for i=1:m
         else
             w=exp(-d)./d;
             sw=sum(w);
-            if ~scale_delta
-                dhat = delta_E *atan(1/sum(1./d)); %for comparision, used in the original GLISp and when N_max <= 30 in C-GLISp
+            if ~ scale_delta
+                dhat = delta_E *atan(1/sum(1./d)); 
             else
-                dhat = delta_E * ((1-N/maxevals)*atan((1/sum(1./d))/iw_ibest)+ N/maxevals *atan(1/sum(1./d))); % used in C-GLISp
+                dhat = delta_E * ((1-N/maxevals)*atan((1/sum(1./d))*iw_ibest)+ N/maxevals *atan(1/sum(1./d))); % used in C-GLISp
             end
             
             if isUnknownFeasibilityConstrained

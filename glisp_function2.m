@@ -1,22 +1,22 @@
-function [out,fesx,fesy,Xtest_out,Ftest_out,itest_out]=glisp_function2(x,y,f,comparetol,g_unkn)
+function [out,fesx,fesy,Xtest_out,Ftest_out,itest_out]=glisp_function2(x,y,fun,comparetol,g_unkn)
 % Preference query function. Along with either satisfactory or feasibility
 % constraints (but NOT both, if the problem include both satisfactory AND feasibility constraints,
 % use 'glisp_function3.m' instead)
 %
-% pref=glisp_function2(x,y,f,comparetol,g_unkn)
+% pref=glisp_function2(x,y,fun,comparetol,g_unkn)
 %
-% evaluates the preference function based on f:
+% evaluates the preference function based on fun:
 %
-% pref = -1 if f(x) < f(y) - comparetol
-%         1 if f(x) > f(y) + comparetol
-%         0 if |f(x)-f(y)| <= comparetol
+% pref = -1 if fun(x) < fun(y) - comparetol
+%         1 if fun(x) > fun(y) + comparetol
+%         0 if |fun(x)-fun(y)| <= comparetol
 %
 % g_unkn is a handle to the function defining unknown constraints.
 %
-% glisp_function2('clear') resets values of f already computed, that are
+% glisp_function2('clear') resets values of fun already computed, that are
 % stored to save computations of expensive functions.
 %
-% val = glisp_function2('get',x) returns val = f(x), that is retrieved from
+% val = glisp_function2('get',x) returns val = fun(x), that is retrieved from
 % existing values if the function has been already evaluated at x, or
 % computes a new value if not.
 %
@@ -53,7 +53,7 @@ for i=1:itest
     end
 end
 if ~xfound
-    fx=f(x(:)');
+    fx=fun(x(:)');
     gx_unkn = g_unkn(x(:)');
     if numel(gx_unkn) >1
         if max(gx_unkn) < comparetol
@@ -81,7 +81,7 @@ if ~xfound
     end
 end
 if ~yfound
-    fy=f(y(:)');
+    fy=fun(y(:)');
         gy_unkn = g_unkn(y(:)');
     if numel(gy_unkn) >1
         if max(gy_unkn) < comparetol
@@ -111,13 +111,13 @@ end
 
 % Make comparison
 if fx<fy-comparetol
-    if (fesx ==1) || (fesx ==0 && fesy ==0)
+    if (fesx) || (~fesx && ~fesy)
         out=-1;
     else
         out =1;
     end
 elseif fx>fy+comparetol
-    if (fesy ==1) || (fesx ==0 && fesy ==0)
+    if (fesy) || (~fesx && ~fesy)
         out=1;
     else
         out=-1;
@@ -148,7 +148,7 @@ end
         end
         
         % Value has not been found
-        val=f(x(:)');
+        val=fun(x(:)');
         g_unknx = g_unkn(x(:)');
         if numel(g_unknx) >1
             if max(g_unknx) < comparetol

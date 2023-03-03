@@ -77,7 +77,7 @@ opts.maxevals=maxevals;
 opts.globoptsol='pswarm';
 
 opts.display=1;
-opts.scalevars=0;
+opts.scalevars=1;
 
 opts.Aineq=Aineq;
 opts.bineq=bineq;
