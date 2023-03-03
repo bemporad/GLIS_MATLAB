@@ -347,11 +347,11 @@ for i=1:m
             dhat = delta_E * atan(aux_all);
             if ~isempty(W)
                 dhat = dhat * 2/pi*dF + alpha * sqrt(sum(w.*(F-fhat).^2)/sw);
-            else
-                dhat = delta_E * ((1-N/maxevals)*atan(aux_all * iw_ibest)+ N/maxevals *atan(aux_all));
-                if ~isempty(W)
-                    dhat = dhat * 2/pi*dF + alpha * sqrt(sum(w.*(F-fhat).^2)/sw);
-                end
+            end
+        else
+            dhat = delta_E * ((1-N/maxevals)*atan(aux_all * iw_ibest)+ N/maxevals *atan(aux_all));
+            if ~isempty(W)
+                dhat = dhat * 2/pi*dF + alpha * sqrt(sum(w.*(F-fhat).^2)/sw);
             end
         end
 
