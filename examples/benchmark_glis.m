@@ -123,7 +123,7 @@ fprintf("Solve the problem by feeding the simulator/fun directly into the GLIS s
 
 fprintf("Solve the problem incrementally (i.e., provide the function evaluation at each iteration) \n")
 rng(2)
-x_= initialize_glis(lb,ub,opts); % x is unscaled
+x_= initialize_glis(lb,ub,opts); % x_ is unscaled
 for k = 1: maxevals
     f_val = fun(x_);
     [x_, prob_setup2] = update_glis(f_val);

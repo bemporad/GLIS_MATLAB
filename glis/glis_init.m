@@ -285,11 +285,17 @@ end
 
 n_initial_random=opts.n_initial_random;
 if ~isfield(opts,'alpha')
-    alpha = 0.;
+    alpha = 1;
 else
     alpha=opts.alpha;
 end
-delta=opts.delta;
+
+if ~isfield(opts,'delta')
+    delta = 0.5;
+else
+    delta=opts.delta;
+end
+
 maxevals=opts.maxevals;
 if maxevals<n_initial_random
     errstr='Max number of function evaluations is too low. You specified';

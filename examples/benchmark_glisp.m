@@ -155,7 +155,7 @@ for j=1:Ntests
 
         rng(0) % for repeatability
         fprintf("Solve the problem incrementally (i.e., provide the preference at each iteration)  \n")
-        [xbest2, x2] = initialize_glisp(lb,ub,opts); % x is unscaled
+        [xbest2, x2] = initialize_glisp(lb,ub,opts); % xbest2, x2 is unscaled
 
         for k = 1:maxevals-1
             pref_val = pref(x2,xbest2);
